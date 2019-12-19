@@ -17,7 +17,10 @@
 import pygame
 from pygame.locals import *
 from sys import exit
+import continues_detect_pitch
 import random
+import multiprocessing
+import numpy as np
 
 pygame.init()
 
@@ -43,28 +46,39 @@ bar1_x, bar2_x = 10. , 620.
 bar1_y, bar2_y = 215. , 215.
 circle_x, circle_y = 307.5, 232.5
 bar1_move, bar2_move = 0. , 0.
-speed_x, speed_y, speed_circ = 250., 250., 250.
+speed_x, speed_y, speed_circ = 75., 75., 75.
 bar1_score, bar2_score = 0,0
 #clock and font objects
 clock = pygame.time.Clock()
 font = pygame.font.SysFont("calibri",40)
+pipe = continues_detect_pitch.continues_detect()
 
 while True:
     
     for event in pygame.event.get():
         if event.type == QUIT:
             exit()
-        if event.type == KEYDOWN:
-            if event.key == K_UP:
-                bar1_move = -ai_speed
-            elif event.key == K_DOWN:
-                bar1_move = ai_speed
-        elif event.type == KEYUP:
-            if event.key == K_UP:
-                bar1_move = 0.
-            elif event.key == K_DOWN:
-                bar1_move = 0.
-    
+        # if event.type == KEYDOWN:
+        #     if event.key == K_UP:
+        #         bar1_move = -ai_speed
+        #     elif event.key == K_DOWN:
+        #         bar1_move = ai_speed
+        # elif event.type == KEYUP:
+        #     if event.key == K_UP:
+        #         bar1_move = 0.
+        #     elif event.key == K_DOWN:
+        #         bar1_move = 0.
+
+    if pipe.poll():
+        number = pipe.recv()
+        print(number)
+        if number > 100:
+            bar1_move = np.clip((number / 100), 5, 30)
+        else:
+            bar1_move = -np.clip(100 - number, 5, 10)
+    else:
+        pass
+
     score1 = font.render(str(bar1_score), True,(255,255,255))
     score2 = font.render(str(bar2_score), True,(255,255,255))
 
